@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flutter Lab Programs</title>
+<style>
+  :root{
+    --bg:#f3f6fb; --card:#ffffff; --ink:#14213d; --muted:#5c6b86;
+    --line:#d5dded; --accent:#0b5fff; --accent-ink:#ffffff;
+    --code-bg:#0f1b33; --code-ink:#e6edfb; --ok:#0f8a5f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0b1220; --card:#121c31; --ink:#e8eefb; --muted:#9aa9c7;
+      --line:#233252; --accent:#5b9bff; --accent-ink:#0b1220; --code-bg:#080e1a; --ok:#4cd6a0; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;line-height:1.5}
+  header{padding:40px 20px 16px;max-width:920px;margin:0 auto}
+  h1{margin:0 0 6px;font-size:clamp(26px,5vw,38px);letter-spacing:-.02em}
+  header p{margin:0;color:var(--muted)}
+  nav{max-width:920px;margin:0 auto;padding:8px 20px 0;display:flex;flex-wrap:wrap;gap:8px}
+  nav a{font-size:14px;color:var(--ink);text-decoration:none;border:1px solid var(--line);
+    background:var(--card);padding:6px 12px;border-radius:999px}
+  nav a:hover,nav a:focus-visible{border-color:var(--accent);outline:none}
+  main{max-width:920px;margin:0 auto;padding:20px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    margin:0 0 22px;overflow:hidden}
+  .head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
+    padding:16px 18px;border-bottom:1px solid var(--line)}
+  .head h2{margin:0;font-size:18px}
+  .head small{color:var(--muted);display:block;font-size:13px}
+  .actions{display:flex;gap:8px}
+  button{font:inherit;font-size:14px;cursor:pointer;border-radius:8px;padding:8px 14px;
+    border:1px solid var(--accent);background:transparent;color:var(--accent)}
+  button.primary{background:var(--accent);color:var(--accent-ink)}
+  button:hover{filter:brightness(1.08)}
+  button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  button.done{border-color:var(--ok);background:var(--ok);color:#fff}
+  pre{margin:0;padding:18px;background:var(--code-bg);color:var(--code-ink);overflow-x:auto;
+    max-height:460px;font:13px/1.55 ui-monospace,Consolas,Menlo,monospace;tab-size:2}
+  footer{max-width:920px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Flutter Lab Programs</h1>
+  <p>Experiments 2 to 9. Copy the code or download it as a file.</p>
+</header>
+<nav id="nav" aria-label="Programs"></nav>
+<main id="list"></main>
+<footer>Flutter programs: save as <code>lib/main.dart</code> in a new project and run <code>flutter run</code>. Dart console programs: run <code>dart run filename.dart</code>.</footer>
+
+<!-- ============ 2. Calculator ============ -->
+<script type="text/plain" class="code" data-id="p2" data-title="2. Simple Calculator (Flutter)" data-file="calculator_main.dart" data-note="Use as lib/main.dart">
+import 'package:flutter/material.dart';
+
+void main() => runApp(const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Calculator(),
+    ));
+
+class Calculator extends StatefulWidget {
+  const Calculator({super.key});
+  @override
+  State<Calculator> createState() => _CalculatorState();
+}
+
+class _CalculatorState extends State<Calculator> {
+  String display = '0';
+  double? first;
+  String? op;
+  bool fresh = true;
+
+  void press(String b) {
+    setState(() {
+      if ('0123456789.'.contains(b)) {
+        if (fresh) {
+          display = b == '.' ? '0.' : b;
+          fresh = false;
+        } else if (!(b == '.' && display.contains('.'))) {
+          display += b;
+        }
+      } else if (b == 'C') {
+        display = '0';
+        first = null;
+        op = null;
+        fresh = true;
+      } else if (b == '=') {
+        if (first != null && op != null) {
+          double second = double.tryParse(display) ?? 0;
+          display = format(calculate(first!, second, op!));
+          first = null;
+          op = null;
+          fresh = true;
+        }
+      } else {
+        first = double.tryParse(display) ?? 0;
+        op = b;
+        fresh = true;
+      }
+    });
+  }
+
+  double calculate(double a, double b, String op) {
+    switch (op) {
+      case '+':
+        return a + b;
+      case '-':
+        return a - b;
+      case 'x':
+        return a * b;
+      default:
+        return a / b;
+    }
+  }
+
+  String format(double v) {
+    if (v.isNaN || v.isInfinite) return 'Error';
+    return v % 1 == 0 ? v.toInt().toString() : v.toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const rows = [
+      ['7', '8', '9', '/'],
+      ['4', '5', '6', 'x'],
+      ['1', '2', '3', '-'],
+      ['C', '0', '.', '+'],
+    ];
+    return Scaffold(
+      appBar: AppBar(title: const Text('Calculator')),
+      body: Column(
+        children: [
+          Expanded(
+            child: Container(
+              alignment: Alignment.bottomRight,
+              padding: const EdgeInsets.all(24),
+              child: Text(display, style: const TextStyle(fontSize: 56)),
+            ),
+          ),
+          for (final row in rows)
+            Row(
+              children: [
+                for (final b in row)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: ElevatedButton(
+                        onPressed: () => press(b),
+                        style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 22)),
+                        child: Text(b, style: const TextStyle(fontSize: 24)),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => press('='),
+                style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 22)),
+                child: const Text('=', style: TextStyle(fontSize: 24)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+</script>
+
+<!-- ============ 3. Bill split ============ -->
+<script type="text/plain" class="code" data-id="p3" data-title="3. Restaurant Bill Split (Dart)" data-file="bill_split.dart" data-note="Console program: dart run bill_split.dart">
+import 'dart:io';
+
+void main() {
+  stdout.write('Enter total bill amount: ');
+  double bill = double.parse(stdin.readLineSync()!);
+
+  stdout.write('Enter tip percentage: ');
+  double tipPercent = double.parse(stdin.readLineSync()!);
+
+  stdout.write('Enter number of people: ');
+  int people = int.parse(stdin.readLineSync()!);
+
+  double tip = bill * tipPercent / 100;
+  double total = bill + tip;
+  double perPerson = total / people;
+
+  print('\n----- Bill Summary -----');
+  print('Bill amount : ${bill.toStringAsFixed(2)}');
+  print('Tip         : ${tip.toStringAsFixed(2)}');
+  print('Total       : ${total.toStringAsFixed(2)}');
+  print('Each person pays: ${perPerson.toStringAsFixed(2)}');
+}
+</script>
+
+<!-- ============ 4. Password generator ============ -->
+<script type="text/plain" class="code" data-id="p4" data-title="4. Strong Random Password Generator (Dart)" data-file="password_generator.dart" data-note="Console program: dart run password_generator.dart">
+import 'dart:io';
+import 'dart:math';
+
+String generatePassword(int length) {
+  const lower = 'abcdefghijklmnopqrstuvwxyz';
+  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const digits = '0123456789';
+  const symbols = '!@#\$%^&*()-_=+[]{};:,.<>?';
+  const all = lower + upper + digits + symbols;
+
+  final rand = Random.secure();
+
+  // Make sure at least one character of each type is present
+  List<String> chars = [
+    lower[rand.nextInt(lower.length)],
+    upper[rand.nextInt(upper.length)],
+    digits[rand.nextInt(digits.length)],
+    symbols[rand.nextInt(symbols.length)],
+  ];
+
+  while (chars.length < length) {
+    chars.add(all[rand.nextInt(all.length)]);
+  }
+
+  chars.shuffle(rand);
+  return chars.join();
+}
+
+void main() {
+  stdout.write('Enter password length (minimum 8): ');
+  int length = int.parse(stdin.readLineSync()!);
+
+  if (length < 8) {
+    print('Password too short. Using length 8.');
+    length = 8;
+  }
+
+  print('Generated password: ${generatePassword(length)}');
+}
+</script>
+
+<!-- ============ 5. Cows and Bulls ============ -->
+<script type="text/plain" class="code" data-id="p5" data-title="5. Cows and Bulls Game (Dart)" data-file="cows_and_bulls.dart" data-note="Console program: dart run cows_and_bulls.dart">
+import 'dart:io';
+import 'dart:math';
+
+// Generates a 4-digit number with no repeated digits
+String generateSecret() {
+  final digits = '0123456789'.split('')..shuffle(Random());
+  return digits.take(4).join();
+}
+
+void main() {
+  final secret = generateSecret();
+  int attempts = 0;
+
+  print('Guess the 4-digit number (all digits different).');
+  print('Bull = right digit, right place. Cow = right digit, wrong place.\n');
+
+  while (true) {
+    stdout.write('Your guess: ');
+    String guess = stdin.readLineSync() ?? '';
+
+    if (guess.length != 4 || int.tryParse(guess) == null) {
+      print('Enter exactly 4 digits.');
+      continue;
+    }
+
+    attempts++;
+    int bulls = 0, cows = 0;
+
+    for (int i = 0; i < 4; i++) {
+      if (guess[i] == secret[i]) {
+        bulls++;
+      } else if (secret.contains(guess[i])) {
+        cows++;
+      }
+    }
+
+    print('Bulls: $bulls, Cows: $cows');
+
+    if (bulls == 4) {
+      print('You won in $attempts attempts! The number was $secret.');
+      break;
+    }
+  }
+}
+</script>
+
+<!-- ============ 6. Product list ============ -->
+<script type="text/plain" class="code" data-id="p6" data-title="6. Product List with Add to Cart (Flutter)" data-file="product_list_main.dart" data-note="Use as lib/main.dart (needs internet for images)">
+import 'package:flutter/material.dart';
+
+void main() => runApp(const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ProductList(),
+    ));
+
+class Product {
+  final String name;
+  final double price;
+  final double rating;
+  final String image;
+  Product(this.name, this.price, this.rating, this.image);
+}
+
+class ProductList extends StatefulWidget {
+  const ProductList({super.key});
+  @override
+  State<ProductList> createState() => _ProductListState();
+}
+
+class _ProductListState extends State<ProductList> {
+  final List<Product> products = [
+    Product('Headphones', 1999, 4.5, 'https://picsum.photos/id/1/200'),
+    Product('Smart Watch', 2999, 4.2, 'https://picsum.photos/id/20/200'),
+    Product('Backpack', 1299, 4.0, 'https://picsum.photos/id/30/200'),
+    Product('Sunglasses', 799, 3.8, 'https://picsum.photos/id/40/200'),
+  ];
+
+  int cartCount = 0;
+
+  void addToCart(Product p) {
+    setState(() => cartCount++);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${p.name} added to cart')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Products'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(child: Text('Cart: $cartCount')),
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        itemCount: products.length,
+        itemBuilder: (context, i) {
+          final p = products[i];
+          return Card(
+            margin: const EdgeInsets.all(8),
+            child: ListTile(
+              leading: Image.network(
+                p.image,
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+                errorBuilder: (c, e, s) => const Icon(Icons.image, size: 60),
+              ),
+              title: Text(p.name),
+              subtitle: Row(
+                children: [
+                  Text('Rs. ${p.price.toStringAsFixed(0)}  '),
+                  const Icon(Icons.star, color: Colors.amber, size: 16),
+                  Text(' ${p.rating}'),
+                ],
+              ),
+              trailing: ElevatedButton(
+                onPressed: () => addToCart(p),
+                child: const Text('Add to Cart'),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+</script>
+
+<!-- ============ 7. Animated profile ============ -->
+<script type="text/plain" class="code" data-id="p7" data-title="7. Animated Profile Image with Follow Button (Flutter)" data-file="animated_profile_main.dart" data-note="Use as lib/main.dart">
+import 'package:flutter/material.dart';
+
+void main() => runApp(const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ProfilePage(),
+    ));
+
+class ProfilePage extends StatefulWidget {
+  const ProfilePage({super.key});
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  bool following = false;
+  bool large = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Profile')),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Tap the image to animate its size
+            GestureDetector(
+              onTap: () => setState(() => large = !large),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+                width: large ? 180 : 120,
+                height: large ? 180 : 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: following ? Colors.green : Colors.blue,
+                    width: 4,
+                  ),
+                  image: const DecorationImage(
+                    image: NetworkImage('https://picsum.photos/id/64/300'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Anna Thomas',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const Text('Flutter Developer | Kerala'),
+            const SizedBox(height: 4),
+            const Text('Tap the photo to resize it',
+                style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 16),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: ElevatedButton(
+                key: ValueKey(following),
+                onPressed: () => setState(() => following = !following),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: following ? Colors.grey : Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(following ? 'Following' : 'Follow'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+</script>
+
+<!-- ============ 8. Registration form ============ -->
+<script type="text/plain" class="code" data-id="p8" data-title="8. Student Registration Form with Validation (Flutter)" data-file="registration_form_main.dart" data-note="Use as lib/main.dart">
+import 'package:flutter/material.dart';
+
+void main() => runApp(const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: RegistrationForm(),
+    ));
+
+class RegistrationForm extends StatefulWidget {
+  const RegistrationForm({super.key});
+  @override
+  State<RegistrationForm> createState() => _RegistrationFormState();
+}
+
+class _RegistrationFormState extends State<RegistrationForm> {
+  final _formKey = GlobalKey<FormState>();
+  final nameC = TextEditingController();
+  final emailC = TextEditingController();
+  final phoneC = TextEditingController();
+  final passC = TextEditingController();
+
+  void submit() {
+    if (_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Registered: ${nameC.text}')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Student Registration')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                controller: nameC,
+                decoration: const InputDecoration(
+                    labelText: 'Name', border: OutlineInputBorder()),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: emailC,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                    labelText: 'Email', border: OutlineInputBorder()),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Enter your email';
+                  if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v)) {
+                    return 'Enter a valid email';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: phoneC,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                    labelText: 'Phone', border: OutlineInputBorder()),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Enter phone number';
+                  if (!RegExp(r'^[0-9]{10}$').hasMatch(v)) {
+                    return 'Phone must be 10 digits';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: passC,
+                obscureText: true,
+                decoration: const InputDecoration(
+                    labelText: 'Password', border: OutlineInputBorder()),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Enter a password';
+                  if (v.length < 6) return 'Minimum 6 characters';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(onPressed: submit, child: const Text('Register')),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+</script>
+
+<!-- ============ 9. Instagram profile UI ============ -->
+<script type="text/plain" class="code" data-id="p9" data-title="9. Instagram Profile Page UI (Flutter)" data-file="instagram_profile_main.dart" data-note="Use as lib/main.dart (needs internet for images)">
+import 'package:flutter/material.dart';
+
+void main() => runApp(const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: InstagramProfile(),
+    ));
+
+class InstagramProfile extends StatelessWidget {
+  const InstagramProfile({super.key});
+
+  Widget stat(String count, String label) => Column(
+        children: [
+          Text(count,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(label),
+        ],
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('anna_codes',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: const [Icon(Icons.menu), SizedBox(width: 12)],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const CircleAvatar(
+                    radius: 40,
+                    backgroundImage:
+                        NetworkImage('https://picsum.photos/id/64/200'),
+                  ),
+                  stat('9', 'Posts'),
+                  stat('1.2K', 'Followers'),
+                  stat('180', 'Following'),
+                ],
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Anna Thomas',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('Flutter Developer\nBuilding apps one widget at a time'),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                        onPressed: () {}, child: const Text('Edit profile')),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                        onPressed: () {}, child: const Text('Share profile')),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 9,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 2,
+                mainAxisSpacing: 2,
+              ),
+              itemBuilder: (context, i) => Image.network(
+                'https://picsum.photos/id/${i + 10}/300',
+                fit: BoxFit.cover,
+                errorBuilder: (c, e, s) =>
+                    Container(color: Colors.grey.shade300),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+</script>
+
+<script>
+(function () {
+  var list = document.getElementById('list');
+  var nav = document.getElementById('nav');
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy') ? resolve() : reject(); }
+      catch (e) { reject(e); }
+      document.body.removeChild(ta);
+    });
+  }
+
+  function flash(btn, msg) {
+    var old = btn.textContent;
+    btn.textContent = msg;
+    btn.classList.add('done');
+    setTimeout(function () { btn.textContent = old; btn.classList.remove('done'); }, 1500);
+  }
+
+  document.querySelectorAll('script.code').forEach(function (s) {
+    var code = s.textContent.replace(/^\n/, '').replace(/\s+$/, '') + '\n';
+    var id = s.dataset.id, title = s.dataset.title, file = s.dataset.file, note = s.dataset.note;
+
+    var a = document.createElement('a');
+    a.href = '#' + id;
+    a.textContent = title.split('(')[0].trim();
+    nav.appendChild(a);
+
+    var sec = document.createElement('section');
+    sec.id = id;
+
+    var head = document.createElement('div');
+    head.className = 'head';
+    var left = document.createElement('div');
+    var h2 = document.createElement('h2'); h2.textContent = title;
+    var small = document.createElement('small'); small.textContent = file + ' - ' + note;
+    left.appendChild(h2); left.appendChild(small);
+
+    var actions = document.createElement('div');
+    actions.className = 'actions';
+
+    var copy = document.createElement('button');
+    copy.textContent = 'Copy';
+    copy.addEventListener('click', function () {
+      copyText(code).then(function () { flash(copy, 'Copied'); },
+                          function () { flash(copy, 'Failed'); });
+    });
+
+    var dl = document.createElement('button');
+    dl.className = 'primary';
+    dl.textContent = 'Download';
+    dl.addEventListener('click', function () {
+      var blob = new Blob([code], { type: 'text/plain' });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url; link.download = file;
+      document.body.appendChild(link); link.click();
+      document.body.removeChild(link);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 500);
+      flash(dl, 'Saved');
+    });
+
+    actions.appendChild(copy); actions.appendChild(dl);
+    head.appendChild(left); head.appendChild(actions);
+
+    var pre = document.createElement('pre');
+    var c = document.createElement('code');
+    c.textContent = code;
+    pre.appendChild(c);
+
+    sec.appendChild(head); sec.appendChild(pre);
+    list.appendChild(sec);
+  });
+})();
+</script>
+</body>
+</html>
